@@ -23,26 +23,37 @@ X_test=vectorizer.fit_transform(X).toarray()
 #Predicting Result (found/not found)
 result=list(clf.predict(X_test))
 
-#----Saving temporary result------------
-file=open("pre_res.tsv",'w')
-file.write("sent\tlabel\n")
-for i in range(len(result)):
-    file.write(X[i]+'\t'+result[i]+'\n')
-file.close()
-
-#getting english stopwords
-from nltk.corpus import stopwords
-mycorpus=list()
-for words in stopwords.words('english'):
-    mycorpus.append(words)
-
+#Setting mycopus.txt
+mycorpus=['i','me','at','to','date','time','for','tommorow','tonight','today',\
+           'sunday','monday','tuesday','wednesday','thursday','friday','saturday',\
+           'morning','evening']
 #For found, extract result text
 def extract(index):
     #Create the extractor function
-    pass
+    temp=X[index].lower()
+    t=re.findall('remi[a-z]+ me? to? (.+?) at',temp)
+    if len(t)==0:
+        t=re.findall('rem[a-z]+ me? to? (.+?) on',temp)
+    if len(t)==0:
+        t=temp
+        t+=' .y'
+        t=re.findall('remi[\w.]+ (.+?) {}'.format(t.split(" ")[len(t.split(" "))-1]),t)
+    if len(t)>0:
+        t=str(t[0]).split()    
+        t=[word for word in t if not word in mycorpus]
+    if len(t)>0:
+        result[index]=" ".join(t)
+    else:
+        result[index]="Not Found"
 
-for i in range(len(result)):
+for i in range(len(X)):
     if(result[i]=="Found"):
-        #extract(i)
-        pass
-    
+        extract(i)
+        
+#----Saving result------------
+file=open("Result.tsv",'w')
+file.write("sent\tlabel\n")
+for i in range(len(result)):
+    file.write(str(X[i])+'\t'+str(result[i])+'\n')
+file.close()
+#---------------------------------------
